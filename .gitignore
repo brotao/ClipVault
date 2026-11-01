@@ -32,3 +32,6 @@ clipvault-*.png
 clipvault-*.txt
 electron-run.*.log
 classes.jar
+
+
+.codegraph/

@@ -1,5 +1,12 @@
 # 更新日志
 
+## 未发布
+
+- 新增：Windows 端 Rust 单进程前台 CLI 实现（`rust/`），协议与 Android/iOS 完全兼容，支持文本/图片双向同步、本地历史、自动重连和终端二维码配对。
+- 新增：CLI 版改用 Windows `WM_CLIPBOARDUPDATE` 事件监听，替代原来的 700ms 轮询。
+- 新增：`clipvault pairing --json`、`history`、`config`、`info` 等离线命令。
+- 文档：补充协议中实际使用的 `pairingPayload`、`pairingCode`、`pairingSecret` 字段说明。
+
 ## v1.2.0 - 2026-06-14
 
 - 新增：首次扫码或输入 6 位配对码连接成功后，会自动保存该设备。

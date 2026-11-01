@@ -264,6 +264,7 @@ Windows 安装包、桌面窗口与托盘图标统一复用安卓启动图标：
 ├─ electron/             Electron 主进程、托盘、TCP 服务
 ├─ ios/                  Xcode 工程
 ├─ public/               Web 静态资源
+├─ rust/                 Rust 单进程 CLI 桌面端
 ├─ scripts/              辅助脚本，例如 USB ADB TCP/IP
 ├─ src/                  React 共享界面与桥接层
 ├─ dist/                 Web 构建产物
@@ -281,6 +282,7 @@ Windows 安装包、桌面窗口与托盘图标统一复用安卓启动图标：
 - Android Release APK / AAB：`android/app/build/outputs/`
 - Web 前端构建产物：`dist/`
 - Electron 桌面端打包产物：`release/`
+- Rust CLI 产物：`rust/target/release/clipvault.exe`
 
 说明：
 
@@ -528,6 +530,21 @@ iOS 不允许普通应用无限时后台读取系统剪贴板。当前实现遵�
 
 - Windows: `%APPDATA%/ClipVault` 对应 Electron `userData`
 - Linux: `~/.config/ClipVault` 对应 Electron `userData`
+
+## Rust CLI 桌面端（可选）
+
+除了 Electron 桌面端，仓库里还有一份单进程前台 CLI 实现，位于 [rust/](rust/)。
+它与手机端协议完全一致，不需要 Node.js 或 Electron，产物约 2–3 MB：
+
+```bash
+cd rust
+cargo run --release -- run          # 前台运行，打印二维码与配对码
+cargo run --release -- run --no-qr  # 只打印配对码与 JSON
+cargo run --release -- run --pair 086314
+```
+
+运行后可在同一个终端输入 `status`、`history`、`pair`、`sync off` 等命令。
+完整说明、与 Electron 版的差异、数据兼容和 Windows 注意事项见 [rust/README.md](rust/README.md)。
 
 ## Android 关键文件
 
