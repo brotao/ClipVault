@@ -855,7 +855,9 @@ object ClipVaultRuntime {
     private fun trimHistory() {
         synchronized(this) {
             while (history.size > settingsState.historyLimit) {
-                history.removeLast()
+                // 不能用 removeLast()：compileSdk 35+ 会绑定到 java.util.List.removeLast，
+                // 在 Android 14 及以下抛 NoSuchMethodError。
+                history.removeAt(history.lastIndex)
             }
         }
     }
