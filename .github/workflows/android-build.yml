@@ -1,0 +1,92 @@
+name: Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'android/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vite.config.*'
+      - 'tsconfig*.json'
+      - 'capacitor.config.*'
+      - '.github/workflows/android-build.yml'
+
+concurrency:
+  group: android-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      # gradle.properties 里只有 -Xmx1536m，AGP 8.13 + Kotlin 2.1 容易 OOM
+      GRADLE_OPTS: '-Dorg.gradle.jvmargs=-Xmx3072m -Dfile.encoding=UTF-8'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install SDK components
+        run: sdkmanager --install "platforms;android-36" "build-tools;36.0.0" "platform-tools"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web assets
+        run: npm run build
+
+      - name: Sync Capacitor (generates assets + capacitor-cordova-android-plugins)
+        run: npx cap sync android
+
+      - name: Set up Gradle cache
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Assemble debug APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Collect APK
+        run: |
+          mkdir -p out
+          cp android/app/build/outputs/apk/debug/app-debug.apk out/ClipVault-Android-debug.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk out/ClipVault-Android-debug-${{ github.run_number }}.apk
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ClipVault-Android-debug-${{ github.run_number }}
+          path: out/ClipVault-Android-debug-${{ github.run_number }}.apk
+          retention-days: 30
+
+      - name: Publish rolling prerelease
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: android-latest
+          name: Android 最新构建
+          prerelease: true
+          body: |
+            自动构建，提交 `${{ github.sha }}`（run #${{ github.run_number }}）
+          files: out/ClipVault-Android-debug.apk
